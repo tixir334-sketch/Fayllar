@@ -6,7 +6,8 @@ on:
     branches:
       - main
     paths:
-      - zmm.zip
+  - zmm.zip
+  - .github/workflows/extract-zip.yml
 
 permissions:
   contents: write
