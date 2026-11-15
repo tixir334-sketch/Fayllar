@@ -1,13 +1,14 @@
+
 name: Extract ZIP into Repository
 
-on:
+'on':
   workflow_dispatch:
   push:
     branches:
       - main
     paths:
-  - zmm.zip
-  - .github/workflows/extract-zip.yml
+      - zmm.zip
+      - .github/workflows/extract-zip.yml
 
 permissions:
   contents: write
@@ -51,10 +52,7 @@ jobs:
               for item in z.infolist():
                   p = PurePosixPath(item.filename)
 
-                  if item.is_dir():
-                      continue
-
-                  if p.is_absolute() or ".." in p.parts:
+                  if item.is_dir() or p.is_absolute() or ".." in p.parts:
                       continue
 
                   if any(part.startswith(".") for part in p.parts):
@@ -74,7 +72,7 @@ jobs:
 
                   total += item.file_size
                   if total > 20_000_000:
-                      raise SystemExit("Fayllar hajmi 20 MB dan oshdi!")
+                      raise SystemExit("20 MB limit exceeded")
 
                   target = output.joinpath(*p.parts)
                   target.parent.mkdir(parents=True, exist_ok=True)
@@ -84,14 +82,17 @@ jobs:
 
                   count += 1
 
-          print(f"Jami {count} ta fayl chiqarildi.")
+          print(f"Extracted {count} files.")
+
+          if count == 0:
+              raise SystemExit("No source files found.")
           PY
 
-      - name: Save extracted files to GitHub
+      - name: Commit extracted files
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add zmm_unpacked/
-          git commit -m "Extract source files from zmm.zip" || echo "No changes"
+          git commit -m "Extract source files from zmm.zip" || exit 0
           git push
           
